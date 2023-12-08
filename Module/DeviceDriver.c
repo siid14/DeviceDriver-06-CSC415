@@ -20,3 +20,13 @@ static int openDevice(struct inode *inode, struct file *fs);
 static ssize_t readFromDevice(struct file *fs, char __user *buf, size_t hsize, loff_t *off);
 static int closeDevice(struct inode *inode, struct file *fs);
 static long deviceIoControl(struct file *fs, unsigned int command, unsigned long data);
+
+// file operations structure
+static struct file_operations deviceFileOps = {
+    .owner = THIS_MODULE,
+    .open = openDevice,
+    .read = readFromDevice,
+    .write = writeToDevice,
+    .release = closeDevice,
+    .unlocked_ioctl = deviceIoControl,
+};
