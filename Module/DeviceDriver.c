@@ -34,13 +34,14 @@ static struct file_operations deviceFileOps = {
 // write data to the device
 static ssize_t writeToDevice(struct file *fs, const char __user *buf, size_t hsize, loff_t *off)
 {
+    // if the data cannot be copied from user space to kernel space
     if (copy_from_user(device_buffer, buf, hsize))
     {
         printk(KERN_ERR "Cannot write data.\n");
-        return -EFAULT;
+        return -EFAULT; // return an error code indicating a fault
     }
     printk(KERN_INFO "Data written : %s", device_buffer);
-    return hsize;
+    return hsize; // return the size of data successfully written
 }
 
 // open the device
@@ -53,7 +54,7 @@ static int openDevice(struct inode *inode, struct file *fs)
 // read data from the device
 static ssize_t readFromDevice(struct file *fs, char __user *buf, size_t hsize, loff_t *off)
 {
-    char test[BUFFER_SIZE];
+    char test[BUFFER_SIZE]; // create a character array to hold the read data
     int end = 3;
 
     int j;
@@ -64,7 +65,7 @@ static ssize_t readFromDevice(struct file *fs, char __user *buf, size_t hsize, l
         // translation logic for words starting with vowels and ending with 'y'
         for (j = 0; j < BUFFER_SIZE - 2; ++j)
         {
-            // translation: Move first letter to end and add "ay"
+            // translation: move first letter to end and add "ay"
             char firstLetter = test[0];
             for (int i = 0; i < BUFFER_SIZE - 2; ++i)
             {
@@ -88,7 +89,7 @@ static ssize_t readFromDevice(struct file *fs, char __user *buf, size_t hsize, l
             test[i] = test[len - i - 1];
             test[len - i - 1] = temp;
         }
-        printk(KERN_INFO "Reversed: %s", test);
+        printk(KERN_INFO "Reversed: %s", test); // print reversed word
     }
 
     if (copy_to_user(buf, test, hsize))
@@ -97,5 +98,36 @@ static ssize_t readFromDevice(struct file *fs, char __user *buf, size_t hsize, l
         return -EFAULT;
     }
     printk(KERN_INFO "Data read : %s", buf);
-    return hsize;
+    return hsize; // return number of bytes read
+}
+
+// close the device
+static int closeDevice(struct inode *inode, struct file *fs)
+{
+    printk(KERN_INFO "Device closed!\n");
+    return 0;
+}
+
+// device control
+static long deviceIoControl(struct file *fs, unsigned int command, unsigned long data)
+{
+    printk(KERN_INFO "command is: %d", command);
+
+    if (command == 0)
+    {
+        printk(KERN_INFO "Switching to ENG -> IA");
+        TRANSLATION_MODE = 0;
+    }
+    else if (command == 1)
+    {
+        printk(KERN_INFO "Switching to IA -> ENG");
+        TRANSLATION_MODE = 1;
+    }
+    else
+    {
+        printk(KERN_INFO "Invalid command!");
+        return -EINVAL;
+    }
+
+    return 0;
 }
