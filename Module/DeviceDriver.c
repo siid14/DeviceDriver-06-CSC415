@@ -116,18 +116,54 @@ static long deviceIoControl(struct file *fs, unsigned int command, unsigned long
     if (command == 0)
     {
         printk(KERN_INFO "Switching to ENG -> IA");
-        TRANSLATION_MODE = 0;
+        TRANSLATION_MODE = 0; // set translation mode to English to IA
     }
     else if (command == 1)
     {
         printk(KERN_INFO "Switching to IA -> ENG");
-        TRANSLATION_MODE = 1;
+        TRANSLATION_MODE = 1; // set translation mode to IA to English
     }
     else
     {
         printk(KERN_INFO "Invalid command!");
-        return -EINVAL;
+        return -EINVAL; // return an invalid argument error
     }
 
+    return 0;
+}
+
+// initialization function for the device driver
+static int __init deviceDriverInit(void)
+{
+    int result;
+    dev_t devno = MKDEV(DEVICE_MAJOR_NUMBER, DEVICE_MINOR_NUMBER); // create device number
+
+    result = register_chrdev_region(devno, 1, DRIVER_NAME); // register character device region
+    if (result < 0)
+    {
+        printk(KERN_WARNING "Cannot get major number %d\n", DEVICE_MAJOR_NUMBER);
+        return result; // return error code
+    }
+
+    cdev_init(&device_cdev, &deviceFileOps); // initialize cdev structure with file operations
+
+    result = cdev_add(&device_cdev, devno, 1); // add character device to the system
+    if (result < 0)
+    {
+        unregister_chrdev_region(devno, 1); // unregister allocated region
+        printk(KERN_WARNING "Error %d adding char device\n", result);
+        return result; // return error code
+    }
+
+    device_buffer = vmalloc(sizeof(uint8_t) * BUFFER_SIZE); // allocate memory for device buffer
+    if (!device_buffer)
+    {
+        unregister_chrdev_region(devno, 1); // unregister allocated region
+        cdev_del(&device_cdev);             // remove added cdev
+        printk(KERN_ERR "Error: failed to allocate memory\n");
+        return -ENOMEM; // return out of memory error
+    }
+
+    printk(KERN_INFO "Device driver loaded successfully!\n");
     return 0;
 }
