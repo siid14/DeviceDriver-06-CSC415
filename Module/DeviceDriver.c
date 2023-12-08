@@ -1,3 +1,21 @@
+/**************************************************************
+ * Class:  CSC-415-01 Fall 2023
+ * Name: Sidney Thomas
+ * Student ID: 918656419
+ * GitHub: siid14
+ * Project: Assignment 6 – Device Driver
+ *
+ * File: DeviceDriver.c
+ *
+ * Description: This file implements a custom device driver with functionalities
+ *              for reading, writing, and controlling an associated device.
+ *              It defines file operations like open, read, write, ioctl (input/output control),
+ *              and close. The driver interacts with user-space applications
+ *              to perform translations of single words based on specific rules,
+ *              such as translating words starting with vowels
+ *              and ending with 'y' to a Igpay Atinlay-like format.
+ **************************************************************/
+
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/fs.h>
