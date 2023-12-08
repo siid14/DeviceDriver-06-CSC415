@@ -3,11 +3,13 @@ KERNELDIR=/lib/modules/`uname -r`/build
 # This the the Makefile for the device driver (not your demonstration program)
 
 #Change the base name here to your module file name - no extension
-BASENAME=goku
+BASENAME=DeviceDriver
 
 
 MODULES = $(BASENAME).ko 
 obj-m += $(BASENAME).o 
+
+EXTRA_CFLAGS += -std=gnu99
 
 all:
 	make -C $(KERNELDIR) M=$(PWD) modules
