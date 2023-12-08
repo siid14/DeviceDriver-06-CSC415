@@ -30,3 +30,22 @@ static struct file_operations deviceFileOps = {
     .release = closeDevice,
     .unlocked_ioctl = deviceIoControl,
 };
+
+// write data to the device
+static ssize_t writeToDevice(struct file *fs, const char __user *buf, size_t hsize, loff_t *off)
+{
+    if (copy_from_user(device_buffer, buf, hsize))
+    {
+        printk(KERN_ERR "Cannot write data.\n");
+        return -EFAULT;
+    }
+    printk(KERN_INFO "Data written : %s", device_buffer);
+    return hsize;
+}
+
+// open the device
+static int openDevice(struct inode *inode, struct file *fs)
+{
+    printk(KERN_INFO "Device opened!\n");
+    return 0;
+}
