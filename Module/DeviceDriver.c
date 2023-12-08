@@ -167,3 +167,25 @@ static int __init deviceDriverInit(void)
     printk(KERN_INFO "Device driver loaded successfully!\n");
     return 0;
 }
+
+// exit function for the device driver
+static void __exit deviceDriverExit(void)
+{
+    dev_t devno = MKDEV(DEVICE_MAJOR_NUMBER, DEVICE_MINOR_NUMBER); // get device number
+    // unregister character device region
+    unregister_chrdev_region(devno, 1);
+    // delete the character device
+    cdev_del(&device_cdev);
+    // free allocated device buffer memory
+    vfree(device_buffer);
+
+    printk(KERN_INFO "Exit of device driver!\n");
+}
+
+module_init(deviceDriverInit); // specify the module initialization function
+module_exit(deviceDriverExit); // specify the module exit function
+
+MODULE_LICENSE("GPL");
+MODULE_AUTHOR("Sidney Thomas");
+MODULE_DESCRIPTION("Assignment 6 – Device Driver");
+MODULE_VERSION("1.0");
