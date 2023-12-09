@@ -1,3 +1,18 @@
+/**************************************************************
+ * Class:  CSC-415-01 Fall 2023
+ * Name: Sidney Thomas
+ * Student ID: 918656419
+ * GitHub: siid14
+ * Project: Assignment 6 – Device Driver
+ *
+ * File: Thomas_Sidney_HW6_main.c
+ *
+ * Description: This file serves as a test script for the custom device driver.
+ *              It interacts with the device's file operations,including functionalities like opening,
+ *              reading, writing, performing input/output control (ioctl), and closing the device.
+ *              Furthermore, it enables users to input single words
+ *              for translation through the device driver.
+ **************************************************************/
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -12,13 +27,14 @@ char translation_buffer[1024]; // buffer to hold translated text
 
 int main(int argc, char *argv[])
 {
+
     int device_file, info;
     int language_switch = 0;
     char switcher[8];
     char user_option[8];
-    printf("---------------------------------------------------\n");
-    printf(" - - -  Welcome to Igpay Atinlay Translator - - -   \n");
-    printf("---------------------------------------------------\n");
+    printf("*******************************************\n");
+    printf("        Welcome to Igpay Atinlay Translator       \n");
+    printf("*******************************************\n");
 
     // open the device file for read/write access
     device_file = open("/dev/DeviceDriver", O_RDWR);
@@ -28,17 +44,16 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    // use ioctl to switch between languages (ENG <-> IA)
-    printf("----------- Language Options -------------------\n");
+    // utilize ioctl to switch between languages (ENG <-> PL)
+    printf("**************** Language Options ****************\n");
     printf("0. Translate from English to Igpay Atinlayn\n");
     printf("1. Translate from Igpay Atinlay to English\n");
-    printf("----------------------------------------------------\n");
+    printf("***************************************************\n");
     printf("\nEnter your desired translation direction (0 or 1): ");
 
     fgets(switcher, 24, stdin);
     language_switch = atoi(switcher);
     ioctl(device_file, language_switch, &info);
-
     while (1)
     {
         // display user options and take input
@@ -68,14 +83,13 @@ int main(int argc, char *argv[])
             printf("Data = %s\n", read_buffer);
             break;
         case '3':
-            // switching between ENG and IA
-            printf("-------------------------------------------\n");
+            // switching between ENG and PL
+            printf("*****************************************\n");
             printf("         Translation Options:            \n");
-            printf("-------------------------------------------\n");
-            ;
+            printf("*****************************************\n");
             printf("  Option 0: Translate English to Igpay Atinlay\n");
             printf("  Option 1: Translate Igpay Atinlay to English\n");
-            printf("-------------------------------------------\n");
+            printf("*****************************************\n");
             printf("\nEnter your choice (0 or 1): ");
             fgets(switcher, 24, stdin);
             language_switch = atoi(switcher);
@@ -93,7 +107,6 @@ int main(int argc, char *argv[])
             break;
         }
     }
-
     // close the device file
     close(device_file);
     return 0;

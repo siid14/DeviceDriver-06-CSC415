@@ -29,10 +29,14 @@
 #define DRIVER_NAME "DeviceDriver"
 #define BUFFER_SIZE 32
 
+// global variables
 int TRANSLATION_MODE = 0;
 uint8_t *device_buffer;
 dev_t device_id = 0;
 
+struct cdev device_cdev;
+
+// function prototypes
 static ssize_t writeToDevice(struct file *fs, const char __user *buf, size_t hsize, loff_t *off);
 static int openDevice(struct inode *inode, struct file *fs);
 static ssize_t readFromDevice(struct file *fs, char __user *buf, size_t hsize, loff_t *off);
@@ -52,14 +56,13 @@ static struct file_operations deviceFileOps = {
 // write data to the device
 static ssize_t writeToDevice(struct file *fs, const char __user *buf, size_t hsize, loff_t *off)
 {
-    // if the data cannot be copied from user space to kernel space
     if (copy_from_user(device_buffer, buf, hsize))
     {
         printk(KERN_ERR "Cannot write data.\n");
-        return -EFAULT; // return an error code indicating a fault
+        return -EFAULT;
     }
     printk(KERN_INFO "Data written : %s", device_buffer);
-    return hsize; // return the size of data successfully written
+    return hsize;
 }
 
 // open the device
@@ -72,7 +75,7 @@ static int openDevice(struct inode *inode, struct file *fs)
 // read data from the device
 static ssize_t readFromDevice(struct file *fs, char __user *buf, size_t hsize, loff_t *off)
 {
-    char test[BUFFER_SIZE]; // create a character array to hold the read data
+    char test[BUFFER_SIZE];
     int end = 3;
 
     int j;
@@ -83,7 +86,7 @@ static ssize_t readFromDevice(struct file *fs, char __user *buf, size_t hsize, l
         // translation logic for words starting with vowels and ending with 'y'
         for (j = 0; j < BUFFER_SIZE - 2; ++j)
         {
-            // translation: move first letter to end and add "ay"
+            // translation: Move first letter to end and add "ay"
             char firstLetter = test[0];
             for (int i = 0; i < BUFFER_SIZE - 2; ++i)
             {
@@ -107,7 +110,7 @@ static ssize_t readFromDevice(struct file *fs, char __user *buf, size_t hsize, l
             test[i] = test[len - i - 1];
             test[len - i - 1] = temp;
         }
-        printk(KERN_INFO "Reversed: %s", test); // print reversed word
+        printk(KERN_INFO "Reversed: %s", test);
     }
 
     if (copy_to_user(buf, test, hsize))
@@ -116,7 +119,7 @@ static ssize_t readFromDevice(struct file *fs, char __user *buf, size_t hsize, l
         return -EFAULT;
     }
     printk(KERN_INFO "Data read : %s", buf);
-    return hsize; // return number of bytes read
+    return hsize;
 }
 
 // close the device
@@ -134,17 +137,17 @@ static long deviceIoControl(struct file *fs, unsigned int command, unsigned long
     if (command == 0)
     {
         printk(KERN_INFO "Switching to ENG -> IA");
-        TRANSLATION_MODE = 0; // set translation mode to English to IA
+        TRANSLATION_MODE = 0;
     }
     else if (command == 1)
     {
         printk(KERN_INFO "Switching to IA -> ENG");
-        TRANSLATION_MODE = 1; // set translation mode to IA to English
+        TRANSLATION_MODE = 1;
     }
     else
     {
         printk(KERN_INFO "Invalid command!");
-        return -EINVAL; // return an invalid argument error
+        return -EINVAL;
     }
 
     return 0;
@@ -154,32 +157,32 @@ static long deviceIoControl(struct file *fs, unsigned int command, unsigned long
 static int __init deviceDriverInit(void)
 {
     int result;
-    dev_t devno = MKDEV(DEVICE_MAJOR_NUMBER, DEVICE_MINOR_NUMBER); // create device number
+    dev_t devno = MKDEV(DEVICE_MAJOR_NUMBER, DEVICE_MINOR_NUMBER);
 
-    result = register_chrdev_region(devno, 1, DRIVER_NAME); // register character device region
+    result = register_chrdev_region(devno, 1, DRIVER_NAME);
     if (result < 0)
     {
-        printk(KERN_WARNING "Cannot get major number %d\n", DEVICE_MAJOR_NUMBER);
-        return result; // return error code
+        printk(KERN_WARNING "Can't get major number %d\n", DEVICE_MAJOR_NUMBER);
+        return result;
     }
 
-    cdev_init(&device_cdev, &deviceFileOps); // initialize cdev structure with file operations
+    cdev_init(&device_cdev, &deviceFileOps);
 
-    result = cdev_add(&device_cdev, devno, 1); // add character device to the system
+    result = cdev_add(&device_cdev, devno, 1);
     if (result < 0)
     {
-        unregister_chrdev_region(devno, 1); // unregister allocated region
+        unregister_chrdev_region(devno, 1);
         printk(KERN_WARNING "Error %d adding char device\n", result);
-        return result; // return error code
+        return result;
     }
 
-    device_buffer = vmalloc(sizeof(uint8_t) * BUFFER_SIZE); // allocate memory for device buffer
+    device_buffer = vmalloc(sizeof(uint8_t) * BUFFER_SIZE);
     if (!device_buffer)
     {
-        unregister_chrdev_region(devno, 1); // unregister allocated region
-        cdev_del(&device_cdev);             // remove added cdev
+        unregister_chrdev_region(devno, 1);
+        cdev_del(&device_cdev);
         printk(KERN_ERR "Error: failed to allocate memory\n");
-        return -ENOMEM; // return out of memory error
+        return -ENOMEM;
     }
 
     printk(KERN_INFO "Device driver loaded successfully!\n");
@@ -189,19 +192,16 @@ static int __init deviceDriverInit(void)
 // exit function for the device driver
 static void __exit deviceDriverExit(void)
 {
-    dev_t devno = MKDEV(DEVICE_MAJOR_NUMBER, DEVICE_MINOR_NUMBER); // get device number
-    // unregister character device region
+    dev_t devno = MKDEV(DEVICE_MAJOR_NUMBER, DEVICE_MINOR_NUMBER);
     unregister_chrdev_region(devno, 1);
-    // delete the character device
     cdev_del(&device_cdev);
-    // free allocated device buffer memory
     vfree(device_buffer);
 
     printk(KERN_INFO "Exit of device driver!\n");
 }
 
-module_init(deviceDriverInit); // specify the module initialization function
-module_exit(deviceDriverExit); // specify the module exit function
+module_init(deviceDriverInit);
+module_exit(deviceDriverExit);
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Sidney Thomas");
