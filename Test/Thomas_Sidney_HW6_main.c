@@ -68,13 +68,14 @@ int main(int argc, char *argv[])
             printf("Data = %s\n", read_buffer);
             break;
         case '3':
-            // switching between ENG and PL
-            printf("*****************************************\n");
+            // switching between ENG and IA
+            printf("-------------------------------------------\n");
             printf("         Translation Options:            \n");
-            printf("*****************************************\n");
+            printf("-------------------------------------------\n");
+            ;
             printf("  Option 0: Translate English to Igpay Atinlay\n");
             printf("  Option 1: Translate Igpay Atinlay to English\n");
-            printf("*****************************************\n");
+            printf("-------------------------------------------\n");
             printf("\nEnter your choice (0 or 1): ");
             fgets(switcher, 24, stdin);
             language_switch = atoi(switcher);
